@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Riwayat Produk</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: #2980b9;
+      color: white;
+    }
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      background-color: #2980b9;
+      color: white;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Riwayat Produk yang Terdeteksi</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Nama</th>
+        <th>Kategori</th>
+        <th>Harga</th>
+        <th>Stok</th>
+        <th>Deskripsi</th>
+      </tr>
+    </thead>
+    <tbody id="history-table"></tbody>
+  </table>
+
+  <a href="menu.html">🔙 Kembali ke Menu Utama</a>
+
+  <script>
+    const table = document.getElementById('history-table');
+    const history = JSON.parse(localStorage.getItem('productHistory')) || [];
+
+    history.forEach((item, index) => {
+      const row = table.insertRow();
+      row.insertCell(0).textContent = index + 1;
+      row.insertCell(1).textContent = item.nama;
+      row.insertCell(2).textContent = item.kategori;
+      row.insertCell(3).textContent = "Rp " + item.harga;
+      row.insertCell(4).textContent = item.stok;
+      row.insertCell(5).textContent = item.deskripsi;
+    });
+  </script>
+</body>
+</html>

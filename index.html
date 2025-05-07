@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scan Produk</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    video, canvas {
+      margin-top: 10px;
+      border: 3px solid #2980b9;
+      border-radius: 10px;
+      width: 320px;
+      height: 240px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    button {
+      background-color: #2980b9;
+      color: white;
+      padding: 12px 24px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    #result {
+      margin-top: 20px;
+    }
+    .menu-link {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Scan Produk dengan Kamera</h1>
+  <div>
+    <button id="start-button">Aktifkan Kamera</button>
+    <button id="capture-button" disabled>Ambil Gambar</button>
+  </div>
+
+  <video id="webcam-video" autoplay playsinline></video>
+  <canvas id="canvas" width="320" height="240"></canvas>
+
+  <div id="result"><strong>Hasil scan akan muncul di sini.</strong></div>
+  <div class="menu-link"><a href="menu.html">🔙 Kembali ke Menu Utama</a></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+  <script>
+    const startButton = document.getElementById('start-button');
+    const captureButton = document.getElementById('capture-button');
+    const webcamVideo = document.getElementById('webcam-video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const resultDiv = document.getElementById('result');
+
+    const URL = "https://teachablemachine.withgoogle.com/models/vaOglGycO/";
+    let model;
+
+    const productData = {
+      "obat": {
+        nama: "Freshcare",
+        kategori: "Obat",
+        harga: 13000,
+        stok: 20,
+        deskripsi: "Obat pereda nyeri dan pegal-pegal."
+      },
+      "aksesoris": {
+        nama: "Dompet Wanita",
+        kategori: "Aksesoris",
+        harga: 25000,
+        stok: 10,
+        deskripsi: "Dompet wanita berbahan kulit sintetik."
+      },
+      "alat tulis": {
+        nama: "Kotak Pensil",
+        kategori: "Alat Tulis",
+        harga: 30000,
+        stok: 50,
+        deskripsi: "Kotak pensil dengan desain minimalis."
+      },
+      "buku": {
+        nama: "Binder",
+        kategori: "Buku",
+        harga: 60000,
+        stok: 30,
+        deskripsi: "Binder ukuran besar untuk dokumen penting."
+      }
+    };
+
+    async function setupWebcam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        webcamVideo.srcObject = stream;
+        captureButton.disabled = false;
+      } catch (err) {
+        alert("Tidak bisa mengakses kamera.");
+      }
+    }
+
+    async function loadModel() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
+    }
+
+    async function predictImage() {
+      ctx.drawImage(webcamVideo, 0, 0, canvas.width, canvas.height);
+      const prediction = await model.predict(canvas);
+      const top = prediction.sort((a, b) => b.probability - a.probability)[0];
+      const className = top.className.toLowerCase();
+      const product = productData[className];
+
+      if (product && top.probability > 0.7) {
+        resultDiv.innerHTML = `
+          <h3>${product.nama}</h3>
+          <p>Kategori: ${product.kategori}</p>
+          <p>Harga: Rp ${product.harga}</p>
+          <p>Stok: ${product.stok}</p>
+          <p>${product.deskripsi}</p>
+        `;
+        // Simpan ke riwayat
+        let history = JSON.parse(localStorage.getItem('productHistory')) || [];
+        history.push(product);
+        localStorage.setItem('productHistory', JSON.stringify(history));
+      } else {
+        resultDiv.innerHTML = "<p>Produk tidak dikenali atau keyakinan rendah.</p>";
+      }
+    }
+
+    startButton.onclick = async () => {
+      await setupWebcam();
+      await loadModel();
+    };
+    captureButton.onclick = predictImage;
+  </script>
+</body>
+</html>
